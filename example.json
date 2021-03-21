@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "locale": "ru-RU",
+    "timezone": "UTC",
+    "client_id": "ru.yandex.searchplugin/7.16 (none none; android 4.4.2)",
+    "interfaces": {
+      "screen": {},
+      "payments": {},
+      "account_linking": {}
+    }
+  },
+  "session": {
+    "message_id": 2,
+    "session_id": "7568f0ff-d0c1-44f7-a830-62577223d607",
+    "skill_id": "47873da4-1166-4c96-b200-954d015b794f",
+    "user": {
+      "user_id": "440CA60EFDC19B7B9AE293F3B2F0FD6AB5338C73DECEE71B5FAF01785D1CC8EC"
+    },
+    "application": {
+      "application_id": "165E86B0B63815D3FB5D83E4B545D999932EFA02803120F32E8632FE0C29FE63"
+    },
+    "new": false,
+    "user_id": "165E86B0B63815D3FB5D83E4B545D999932EFA02803120F32E8632FE0C29FE63"
+  },
+  "request": {
+    "command": "хочу в кино",
+    "original_utterance": "хочу в кино",
+    "nlu": {
+      "tokens": [
+        "хочу",
+        "в",
+        "кино"
+      ],
+      "entities": [],
+      "intents": {
+        "pars_entity": {
+          "slots": {
+            "rest": {
+              "type": "place",
+              "tokens": {
+                "start": 1,
+                "end": 3
+              },
+              "value": "rest"
+            }
+          }
+        }
+      }
+    },
+    "markup": {
+      "dangerous_context": false
+    },
+    "type": "SimpleUtterance"
+  },
+  "version": "1.0"
+}
