@@ -50,7 +50,8 @@ def add_where(session_id, where):
     try:
         sqlite_connection = sqlite3.connect('session_data.db')
         cursor = sqlite_connection.cursor()
-        sqlite_insert_query = """UPDATE session_data SET 'where' = \"%s\" WHERE session_id = \"%s\"""" % (where, session_id)
+        sqlite_insert_query = """UPDATE session_data SET 'where' = \"%s\" WHERE session_id = \"%s\"""" % (
+        where, session_id)
         count = cursor.execute(sqlite_insert_query)
         sqlite_connection.commit()
         cursor.close()
@@ -58,12 +59,12 @@ def add_where(session_id, where):
         logging.warning("Ошибка при работе с SQLite", error)
 
 
-
 def add_rest(session_id, rest):
     try:
         sqlite_connection = sqlite3.connect('session_data.db')
         cursor = sqlite_connection.cursor()
-        sqlite_insert_query = """UPDATE session_data SET 'rest' = \"%s\" WHERE session_id = \"%s\"""" % (rest, session_id)
+        sqlite_insert_query = """UPDATE session_data SET 'rest' = \"%s\" WHERE session_id = \"%s\"""" % (
+        rest, session_id)
         count = cursor.execute(sqlite_insert_query)
         sqlite_connection.commit()
         cursor.close()
@@ -114,7 +115,7 @@ def parser(input_dict, session_id):
             OUT["rest"] = parser_validator(all_entity, tokens=tokens, word="rest")
             OUT["what"] = parser_validator(all_entity, tokens=tokens, word="what")
             OUT["where"] = parser_validator(all_entity, tokens=tokens, word="where")
-            #logging.warning(OUT, session_id)
+            # logging.warning(OUT, session_id)
             if OUT["rest"] is not None:
                 add_rest(session_id, OUT["rest"]["tokens"])
             if OUT["what"] is not None:
@@ -129,7 +130,7 @@ def parser(input_dict, session_id):
             OUT["rest"] = parser_validator(pars_entity, tokens=tokens, word="rest")
             OUT["what"] = parser_validator(pars_entity, tokens=tokens, word="what")
             OUT["where"] = parser_validator(pars_entity, tokens=tokens, word="where")
-            #logging.warning(OUT, session_id)
+            # logging.warning(OUT, session_id)
             if OUT["rest"] is not None:
                 add_rest(session_id, OUT["rest"]["tokens"])
             if OUT["what"] is not None:
@@ -143,7 +144,7 @@ def parser(input_dict, session_id):
             OUT["rest"] = parser_validator(pars_purpose, tokens=tokens, word="rest")
             OUT["what"] = parser_validator(pars_purpose, tokens=tokens, word="what")
             OUT["where"] = parser_validator(pars_purpose, tokens=tokens, word="where")
-            #logging.warning(OUT, session_id)
+            # logging.warning(OUT, session_id)
             if OUT["rest"] is not None:
                 add_rest(session_id, OUT["rest"]["tokens"])
             if OUT["what"] is not None:
@@ -224,4 +225,4 @@ if __name__ == '__main__':
         app.run(host='192.168.1.116', port=5200)
     except OSError:
         app.run(host='192.168.1.82', port=5200)
-    #app.run(host='localhost', port=5200)
+    # app.run(host='localhost', port=5200)
