@@ -16,6 +16,93 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)s %(name)s %(message)s'
 )
 
+GOOD_PHRASES = []
+
+
+# ______________________________________________________________--DATABASE--_______________________________________
+
+def fill_good_phrases():
+    global GOOD_PHRASES
+    try:
+        sqlite_connection = sqlite3.connect('DB_alice.db')
+        cursor = sqlite_connection.cursor()
+        sql_select_query = """SELECT * FROM advices"""
+        cursor.execute(sql_select_query)
+        records = cursor.fetchall()
+        cursor.close()
+        for el in records:
+            GOOD_PHRASES.append(el[1])
+    except sqlite3.Error as error:
+        logging.warning("Ошибка при работе с SQLite", error)
+
+
+def new_user(session_id):
+    try:
+        sqlite_connection = sqlite3.connect('DB_alice.db')
+        cursor = sqlite_connection.cursor()
+        sqlite_insert_query = """INSERT INTO sessions
+                              ('session_id', 'geo')
+                              VALUES
+                              (\"%s\", '');""" % session_id
+        cursor.execute(sqlite_insert_query)
+        sqlite_connection.commit()
+        cursor.close()
+    except sqlite3.Error as error:
+        logging.warning("Ошибка при работе с SQLite", error)
+
+
+def check_entity(session_id):
+    try:
+        sqlite_connection = sqlite3.connect('DB_alice.db')
+        cursor = sqlite_connection.cursor()
+        sql_select_query = """SELECT * FROM sessions WHERE session_id=\"%s\"""" % session_id
+        cursor.execute(sql_select_query)
+        records = cursor.fetchall()
+        cursor.close()
+        return records[0]
+    except sqlite3.Error as error:
+        logging.warning("Ошибка при работе с SQLite", error)
+        return None
+
+
+def add_geo(session_id, geo):
+    try:
+        sqlite_connection = sqlite3.connect('DB_alice.db')
+        cursor = sqlite_connection.cursor()
+        sqlite_insert_query = """UPDATE sessions SET 'geo' = \"%s\" WHERE session_id = \"%s\"""" % (geo, session_id)
+        cursor.execute(sqlite_insert_query)
+        sqlite_connection.commit()
+        cursor.close()
+    except sqlite3.Error as error:
+        logging.warning("Ошибка при работе с SQLite", error)
+
+
+def add_coords(session_id, coords_str):
+    try:
+        sqlite_connection = sqlite3.connect('DB_alice.db')
+        cursor = sqlite_connection.cursor()
+        sqlite_insert_query = """UPDATE sessions SET 'coord_A' = \"%s\" WHERE session_id = \"%s\"""" % (
+            coords_str[0], session_id)
+        cursor.execute(sqlite_insert_query)
+        sqlite_connection.commit()
+        cursor.close()
+
+        sqlite_connection = sqlite3.connect('DB_alice.db')
+        cursor = sqlite_connection.cursor()
+        sqlite_insert_query = """UPDATE sessions SET 'coord_B' = \"%s\" WHERE session_id = \"%s\"""" % (
+            coords_str[1], session_id)
+        cursor.execute(sqlite_insert_query)
+        sqlite_connection.commit()
+        cursor.close()
+
+    except sqlite3.Error as error:
+        logging.warning("Ошибка при работе с SQLite", error)
+    except Exception as e:
+        logging.warning("Ошибка при выделении координат", e, coords_str)
+
+
+# ______________________________________________________________--DATABASE--_______________________________________
+
 
 def first_meet():
     meeting_Arr = [
@@ -48,26 +135,60 @@ def search_city(arr):
 
 
 def handle_dialog(res, req):
+    ses_id = req['session']['session_id']
     if req['request']['original_utterance']:
         try:
-            map_request = 'http://www.brodim.ru/ai-quotes/city_in=' + search_city(req['request']["nlu"]["entities"])[0]
-            link = str(requests.get(map_request).json()['link'])
-            res['response']['text'] = "Я подготвила прогулку для тебя в случайном месте твоего города"
-            res["response"]["buttons"] = [
-                {
-                    "url": "%s" % link,
-                    'title': "Перейти на карту",
-                    "payload": {},
-                },
-                {
-                    'title': "Построить новый маршут",
-                }
-            ]
+            if req['request']['command'] == "найти ближайшие остановки":
+                if check_entity(ses_id)[2] is not None:
+                    bus_request = 'http://www.brodim.ru/bus-stop/' + str(check_entity(ses_id)[2]) + '/' + str(
+                        check_entity(ses_id)[3])
+                    link_bus = str(requests.get(bus_request).json()['link'])
+                    res['response']['text'] = "Я нашла ближайшие остановки"
+                    res["response"]["buttons"] = [
+                        {
+                            "url": "%s" % link_bus,
+                            'title': "Посмотреть на карте",
+                            "payload": {},
+                        },
+                        {
+                            'title': "Выбрать другой город",
+                        },
+                    ]
+                else:
+                    res['response']['text'] = "Для начала ты должен сказать мне свой город"
+            elif req['request']['command'] == 'выбрать другой город':
+                res['response']['text'] = "Для нового маршута, просто сообщи свой город"
+            else:
+                if req['request']['command'] == "построить новый маршут" and check_entity(ses_id)[1] != '':
+                    city_geo = check_entity(ses_id)[1]
+                else:
+                    city_geo = search_city(req['request']["nlu"]["entities"])[0]
+                    add_geo(session_id=ses_id, geo=city_geo)
+                map_request = 'http://www.brodim.ru/ai-quotes/city_in=' + city_geo
+                link_map = str(requests.get(map_request).json()['link'])
+                coords = link_map[link_map.find('=') + 1:].split(';')
+                add_coords(session_id=ses_id, coords_str=coords)
+                res['response']['text'] = GOOD_PHRASES[rndI(0, len(GOOD_PHRASES) - 1)]
+                res["response"]["buttons"] = [
+                    {
+                        "url": "%s" % link_map,
+                        'title': "Перейти на карту",
+                        "payload": {},
+                    },
+                    {
+                        'title': "Построить новый маршут",
+                    },
+                    {
+                        'title': "Найти ближайшие остановки",
+                    }
+                ]
         except Exception as e:
             res['response']['text'] = error_message() + "\n Просто назови свой город"
+            logging.warning("Ошибка при работе при обработке ответа", e)
     else:
         # # Если это первое сообщение — представляемся
         res['response']['text'] = first_meet()
+        new_user(ses_id)
 
 
 @app.route('/', methods=['POST'])
@@ -86,6 +207,7 @@ def main():
 
 
 if __name__ == '__main__':
+    fill_good_phrases()
     try:
         app.run(host='192.168.1.116', port=5200)
     except OSError:

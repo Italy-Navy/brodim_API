@@ -54,6 +54,38 @@ class Quote(Resource):
         return bus_coord_string
 
 
+class BusStop(Resource):
+    def find_bus_stop(self, coord1, coord2):
+        coord_data = coord1.split(',')
+        coord1 = coord_data[1] + ',' + coord_data[0]
+        coord_data = coord2.split(',')
+        coord2 = coord_data[1] + ',' + coord_data[0]
+        name_object = "общественный транспорт"
+        data_coord1 = self.find_concret_bus_stop(coord1, name_object)
+        data_coord2 = self.find_concret_bus_stop(coord2, name_object)
+        final_string = data_coord1 + ';' + data_coord2
+        return {"link": str('http://www.brodim.ru/bus_karta?points=%s' % final_string)}
+
+    def get(self, object_name1, object_name2):
+        data = self.find_bus_stop(object_name1, object_name2)
+        return data, 201
+
+    def post(self, object_name1, object_name2):
+        data = self.find_bus_stop(object_name1, object_name2)
+        return data, 201
+
+    def find_concret_bus_stop(self, center, name_object):
+        bus_coord_string = ""
+        object_request = "https://search-maps.yandex.ru/v1/?text=" + name_object + "&type=biz&lang=ru_RU&ll=" + \
+                         center + "&spn=0.552069,0.400552&results=7&apikey=6633a817-a99a-4d17-b557-a77557303ccc"
+        object_response = requests.get(object_request)
+        json_response = object_response.json()
+        for i in json_response['features']:
+            coord_object = i['geometry']['coordinates']
+            bus_coord_string += str(coord_object[1]) + ',' + str(coord_object[0]) + ';'
+        return bus_coord_string[:-1]
+
+
 @app.route('/map_js')
 def map_js():
     points = request.args.get("points")
@@ -67,11 +99,27 @@ def map_js():
 @app.route('/karta')
 def karta():
     points = request.args.get("points")
-    print(points)
     return render_template('map.html', dots=points)
 
 
+@app.route('/bus_map_js')
+def bus_map_js():
+    points = request.args.get("points")
+    poin = list(points.split(';'))
+    points = []
+    for el in poin:
+        points.append(list(map(float, el.split(','))))
+    return render_template('bus_map.js', points_arr=points)
+
+
+@app.route('/bus_karta')
+def bus_karta():
+    points = request.args.get("points")
+    return render_template('bus_map.html', dots=points)
+
+
 api.add_resource(Quote, "/ai-quotes", "/ai-quotes/", "/ai-quotes/<string:city_in>")
+api.add_resource(BusStop, "/bus-stop", "/bus-stop/", "/bus-stop/<string:object_name1>/<string:object_name2>")
 
 if __name__ == '__main__':
     try:
