@@ -7,7 +7,7 @@ from random import randint as rndI
 import logging
 import json
 
-import sqlite3
+import sqlite3  # импортируем необходимые библиотеки
 
 app = Flask(__name__)
 
@@ -42,7 +42,7 @@ def new_user(session_id):
         cursor = sqlite_connection.cursor()
         sqlite_insert_query = """INSERT INTO sessions
                               ('session_id', 'geo')
-                              VALUES
+                              VALUES                             #создаём новую строку в БД для ссесии пользователя
                               (\"%s\", '');""" % session_id
         cursor.execute(sqlite_insert_query)
         sqlite_connection.commit()
@@ -109,7 +109,7 @@ def first_meet():
         "В каком городе хотите построить маршрут?",
         "В каком городе планируете прогулку?",
         "В каком городе хотите погулять?",
-        "В каком городе планируете провести время?",
+        "В каком городе планируете провести время?",  # фразы, которыми Алиса начинает диалог
         "В каком городе хотите провести встречу?",
         "В каком городе планируете погулять?",
     ]
@@ -120,7 +120,7 @@ def error_message():
     meeting_Arr = [
         "Извини, я тебя не поняла.",
         "Можешь повторить?",
-        "Я тебя не поняла.",
+        "Я тебя не поняла.",  # фразы, которые выдаёт Алиса при неверно введённом городе
         "Попробуй сказать по-другому.",
     ]
     return meeting_Arr[rndI(0, len(meeting_Arr) - 1)]
@@ -130,7 +130,7 @@ def search_city(arr):
     CITY = []
     for el in arr:
         if el["type"] == "YANDEX.GEO":
-            CITY.append(el['value']['city'])
+            CITY.append(el['value']['city'])  # функция для нахождения города в сообщении пользователя
     return CITY
 
 
@@ -150,14 +150,14 @@ def handle_dialog(res, req):
                             'title': "Посмотреть на карте",
                             "payload": {},
                         },
-                        {
+                        {  # часть функции для вывода ближайших остановок
                             'title': "Выбрать другой город",
                         },
                     ]
                 else:
                     res['response']['text'] = "Для начала ты должен сказать мне свой город"
             elif req['request']['command'] == 'выбрать другой город':
-                res['response']['text'] = "Для нового маршута, просто сообщи свой город"
+                res['response']['text'] = "Для нового маршута, просто сообщи свой город"  # помощь
             elif 'алиса, что ты умеешь' in req['request']['command'] or 'что ты умеешь' in req['request']['command']:
                 res['response']['text'] = 'Я могу спланировать тебе прогулку!' + '\n' + \
                                           'Просто скажи мне город, и я проложу тебе маршрут.' + '\n' + \
@@ -187,7 +187,7 @@ def handle_dialog(res, req):
                         "payload": {},
                     },
                     {
-                        'title': "Построить новый маршут",
+                        'title': "Построить новый маршут",  # часть функции для вывода карты с маршрутом
                     },
                     {
                         'title': "Найти ближайшие остановки",
@@ -206,7 +206,7 @@ def handle_dialog(res, req):
 def main():
     # # Создаем ответ
     response = {
-        'session': request.json['session'],
+        'session': request.json['session'],  # главный роут алисы
         'version': request.json['version'],
         'response': {
             'end_session': False

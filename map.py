@@ -4,7 +4,7 @@ from flask import request
 from flask import Flask, render_template
 from flask_restful import Api, Resource, reqparse
 import requests
-from random import choice
+from random import choice                #импортируем необходимые библиотеки
 
 app = Flask(__name__)
 api = Api(app)
@@ -23,12 +23,12 @@ class Quote(Resource):
         city_response = requests.get(city_request).json()
         city_coord = city_response['response']['GeoObjectCollection']['featureMember'][0]['GeoObject']['Point']['pos']
         coord = city_coord.split()
-        string_coord = coord[0] + "," + coord[1]
+        string_coord = coord[0] + "," + coord[1]        #находим координаты города с помощью requset-запроса
 
         name_object1 = 'кафе'
         name_object2 = 'развлечение'
         cafe_coord = self.find_concret_object(string_coord, name_object1)
-        fun_coord = self.find_concret_object(string_coord, name_object2)
+        fun_coord = self.find_concret_object(string_coord, name_object2)       #находим координаты объектов
         final_string = cafe_coord + ';' + fun_coord
         return {"link": str('http://www.brodim.ru/karta?points=%s' % final_string)}
 
@@ -47,7 +47,7 @@ class Quote(Resource):
         object_response = requests.get(object_request)
         json_response = object_response.json()
         for i in json_response['features']:
-            coord_object = i['geometry']['coordinates']
+            coord_object = i['geometry']['coordinates']         #функция для нахождения координат конкретного объекта
             data_coord.append(coord_object)
         bus_coord = choice(data_coord)
         bus_coord_string = str(bus_coord[1]) + ',' + str(bus_coord[0])
@@ -62,7 +62,7 @@ class BusStop(Resource):
         coord2 = coord_data[1] + ',' + coord_data[0]
         name_object = "общественный транспорт"
         data_coord1 = self.find_concret_bus_stop(coord1, name_object)
-        data_coord2 = self.find_concret_bus_stop(coord2, name_object)
+        data_coord2 = self.find_concret_bus_stop(coord2, name_object)       #находим координаты остановок у объектов
         final_string = data_coord1 + ';' + data_coord2
         return {"link": str('http://www.brodim.ru/bus_karta?points=%s' % final_string)}
 
@@ -79,7 +79,7 @@ class BusStop(Resource):
         object_request = "https://search-maps.yandex.ru/v1/?text=" + name_object + "&type=biz&lang=ru_RU&ll=" + \
                          center + "&spn=0.552069,0.400552&results=7&apikey=6633a817-a99a-4d17-b557-a77557303ccc"
         object_response = requests.get(object_request)
-        json_response = object_response.json()
+        json_response = object_response.json()             #функция для нахождения координат остановок у одного объекта
         for i in json_response['features']:
             coord_object = i['geometry']['coordinates']
             bus_coord_string += str(coord_object[1]) + ',' + str(coord_object[0]) + ';'
