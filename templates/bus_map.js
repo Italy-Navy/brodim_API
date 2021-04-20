@@ -1,6 +1,7 @@
 function init () {
+    var points_arr = {{points_arr}}
     var myMap = new ymaps.Map('map', {
-            center: [55.76, 37.64],
+            center: points_arr[0],
             zoom: 10
         }, {
             searchControlProvider: 'yandex#search'
@@ -16,7 +17,7 @@ function init () {
     // Чтобы задать опции одиночным объектам и кластерам,
     // обратимся к дочерним коллекциям ObjectManager.
 
-    var points_arr = {{points_arr}}
+
     for(var i =0; i < points_arr.length; i++){
         myMap.geoObjects.add(new ymaps.Placemark(points_arr[i], {
         }));
